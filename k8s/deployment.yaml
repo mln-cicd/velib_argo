@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-workflows-controller
+  labels:
+    app: argo-workflows-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-workflows-controller
+  template:
+    metadata:
+      labels:
+        app: argo-workflows-controller
+    spec:
+      containers:
+      - name: argo-workflows-controller
+        image: argo-workflows-controller
+        ports:
+        - containerPort: 8080

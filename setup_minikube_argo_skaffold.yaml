@@ -53,39 +53,10 @@
       shell: curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && chmod +x skaffold && sudo mv skaffold /usr/local/bin/
       when: skaffold_installed.rc != 0
 
-    - name: Create Skaffold directory
-      file:
-        path: "{{ ansible_env.PWD }}/shared/skaffold"
-        state: directory
-        mode: '0755'
-
-    - name: Create Argo Skaffold directory
-      file:
-        path: "{{ ansible_env.PWD }}/shared/skaffold/argo"
-        state: directory
-        mode: '0755'
-
-    - name: Configure Skaffold
-      copy:
-        dest: "{{ ansible_env.PWD }}/shared/skaffold/skaffold.yaml"
-        content: |
-          apiVersion: skaffold/v2beta29
-          kind: Config
-          build:
-            artifacts:
-            - image: argo-workflows-controller
-              context: ./shared/skaffold/argo
-              docker:
-                dockerfile: Dockerfile
-          deploy:
-            kubectl:
-              manifests:
-              - ./shared/skaffold/argo/argo-workflows-controller.yaml
-
     - name: Deploy Skaffold
       command: skaffold run --tail
       args:
-        chdir: "{{ ansible_env.PWD }}/shared/skaffold"
+        chdir: "{{ ansible_env.PWD }}"
 
     - name: Install k9s
       shell: curl -sS https://webinstall.dev/k9s | bash
