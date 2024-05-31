@@ -82,12 +82,10 @@
               manifests:
               - ./shared/skaffold/argo/argo-workflows-controller.yaml
 
-
-    - name: Deploy Skaffold (optional)
+    - name: Deploy Skaffold
       command: skaffold run --tail
       args:
         chdir: "{{ ansible_env.PWD }}/shared/skaffold"
-      when: deploy_skaffold | default(false)
 
     - name: Install k9s
       shell: curl -sS https://webinstall.dev/k9s | bash

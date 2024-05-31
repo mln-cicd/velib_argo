@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-workflows-controller
+  namespace: argo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-workflows-controller
+  template:
+    metadata:
+      labels:
+        app: argo-workflows-controller
+    spec:
+      containers:
+      - name: argo-workflows-controller
+        image: argo-workflows-controller:latest
+        volumeMounts:
+        - name: test-workflow
+          mountPath: /etc/argo/test-workflow.yaml
+          subPath: test-workflow.yaml
+      volumes:
+      - name: test-workflow
+        configMap:
+          name: test-workflow
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-workflow
+  namespace: argo
+data:
+  test-workflow.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: test-workflow-
+    spec:
+      entrypoint: whalesay
+      templates:
+      - name: whalesay
+        container:
+          image: docker/whalesay:latest
+          command: [cowsay]
+          args: ["hello world"]
