@@ -1,0 +1,52 @@
+---
+- name: Destroy Minikube, Argo Workflows, and Skaffold
+  hosts: localhost
+  tasks:
+    - name: Check if Argo Workflows is installed
+      command: helm status argo
+      register: argo_status
+      ignore_errors: yes
+
+    - name: Uninstall Argo Workflows
+      command: helm uninstall argo
+      when: argo_status.rc == 0
+
+    - name: Stop Minikube
+      command: minikube stop
+      ignore_errors: yes
+
+    - name: Delete Minikube
+      command: minikube delete
+
+    - name: Remove Skaffold directory
+      file:
+        path: "{{ ansible_env.PWD }}/shared/skaffold"
+        state: absent
+
+    - name: Remove Minikube
+      file:
+        path: /usr/local/bin/minikube
+        state: absent
+      become: yes
+
+    - name: Remove kubectl
+      file:
+        path: /usr/local/bin/kubectl
+        state: absent
+      become: yes
+
+    - name: Remove Helm
+      file:
+        path: /usr/local/bin/helm
+        state: absent
+      become: yes
+
+    - name: Remove Skaffold
+      file:
+        path: /usr/local/bin/skaffold
+        state: absent
+      become: yes
+
+    - name: Remove k9s
+      shell: rm -rf ~/.k9s
+      when: ansible_os_family == "Linux"

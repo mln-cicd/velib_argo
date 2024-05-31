@@ -1,0 +1,94 @@
+---
+- name: Setup Minikube, Argo Workflows, and Skaffold
+  hosts: localhost
+  tasks:
+    - name: Ensure Minikube is installed
+      command: minikube version
+      register: minikube_installed
+      ignore_errors: yes
+
+    - name: Install Minikube
+      shell: curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+      when: minikube_installed.rc != 0
+
+    - name: Start Minikube
+      command: minikube start
+
+    - name: Ensure kubectl is installed
+      command: kubectl version --client
+      register: kubectl_installed
+      ignore_errors: yes
+
+    - name: Install kubectl
+      shell: curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+      when: kubectl_installed.rc != 0
+
+    - name: Ensure Helm is installed
+      command: helm version
+      register: helm_installed
+      ignore_errors: yes
+
+    - name: Install Helm
+      shell: curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh
+      when: helm_installed.rc != 0
+
+    - name: Add Argo Helm repository
+      command: helm repo add argo https://argoproj.github.io/argo-helm
+
+    - name: Update Helm repositories
+      command: helm repo update
+
+    - name: Install Argo Workflows
+      command: helm install argo argo/argo-workflows --namespace argo --create-namespace --set server.extraArgs[0]="--auth-mode=server"
+
+    - name: Wait for Argo Workflows server to be ready
+      command: kubectl -n argo rollout status --watch --timeout=600s deployment/argo-argo-workflows-server
+
+    - name: Ensure Skaffold is installed
+      command: skaffold version
+      register: skaffold_installed
+      ignore_errors: yes
+
+    - name: Install Skaffold
+      shell: curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && chmod +x skaffold && sudo mv skaffold /usr/local/bin/
+      when: skaffold_installed.rc != 0
+
+    - name: Create Skaffold directory
+      file:
+        path: "{{ ansible_env.PWD }}/shared/skaffold"
+        state: directory
+        mode: '0755'
+
+    - name: Create Argo Skaffold directory
+      file:
+        path: "{{ ansible_env.PWD }}/shared/skaffold/argo"
+        state: directory
+        mode: '0755'
+
+    - name: Configure Skaffold
+      copy:
+        dest: "{{ ansible_env.PWD }}/shared/skaffold/skaffold.yaml"
+        content: |
+          apiVersion: skaffold/v2beta29
+          kind: Config
+          build:
+            artifacts:
+            - image: argo-workflows-controller
+              context: ./shared/skaffold/argo
+              docker:
+                dockerfile: Dockerfile
+          deploy:
+            kubectl:
+              manifests:
+              - ./shared/skaffold/argo/argo-workflows-controller.yaml
+
+
+    - name: Deploy Skaffold (optional)
+      command: skaffold run --tail
+      args:
+        chdir: "{{ ansible_env.PWD }}/shared/skaffold"
+      when: deploy_skaffold | default(false)
+
+    - name: Install k9s
+      shell: curl -sS https://webinstall.dev/k9s | bash
+      when: ansible_os_family == "Linux"
