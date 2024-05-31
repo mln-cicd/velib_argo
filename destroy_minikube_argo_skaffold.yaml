@@ -18,35 +18,30 @@
     - name: Delete Minikube
       command: minikube delete
 
-    - name: Remove Skaffold directory
-      file:
-        path: "{{ ansible_env.PWD }}/shared/skaffold"
-        state: absent
-
-    - name: Remove Minikube
+    - name: Remove Minikube binary
       file:
         path: /usr/local/bin/minikube
         state: absent
       become: yes
 
-    - name: Remove kubectl
+    - name: Remove kubectl binary
       file:
         path: /usr/local/bin/kubectl
         state: absent
       become: yes
 
-    - name: Remove Helm
+    - name: Remove Helm binary
       file:
         path: /usr/local/bin/helm
         state: absent
       become: yes
 
-    - name: Remove Skaffold
+    - name: Remove Skaffold binary
       file:
         path: /usr/local/bin/skaffold
         state: absent
       become: yes
 
-    - name: Remove k9s
+    - name: Remove k9s configuration
       shell: rm -rf ~/.k9s
       when: ansible_os_family == "Linux"
