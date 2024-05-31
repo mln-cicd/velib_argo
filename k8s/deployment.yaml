@@ -16,6 +16,11 @@ spec:
     spec:
       containers:
       - name: argo-workflows-controller
-        image: argo-workflows-controller
+        image: argo-workflows-controller:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: LEADER_ELECTION_IDENTITY
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
