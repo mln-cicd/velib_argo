@@ -14,3 +14,5 @@ deploy:
     manifests:
     - ./k8s/deployment.yaml
     - ./k8s/service.yaml
+    - ./k8s/role.yaml
+    - ./k8s/rolebinding.yaml

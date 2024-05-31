@@ -53,6 +53,14 @@
       shell: curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && chmod +x skaffold && sudo mv skaffold /usr/local/bin/
       when: skaffold_installed.rc != 0
 
+    - name: Ensure Skaffold is in PATH
+      shell: echo $PATH
+      register: path_output
+
+    - name: Debug PATH
+      debug:
+        msg: "{{ path_output.stdout }}"
+
     - name: Deploy Skaffold
       command: skaffold run --tail
       args:
